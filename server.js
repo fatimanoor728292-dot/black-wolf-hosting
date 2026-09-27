@@ -37,7 +37,9 @@ fs.mkdirSync(SITES, {
 // ==========================================
 
 function loadProjects() {
+
   try {
+
     if (!fs.existsSync(PROJECTS_FILE)) {
       return [];
     }
@@ -48,7 +50,12 @@ function loadProjects() {
         'utf8'
       );
 
-    return JSON.parse(data);
+    const projects =
+      JSON.parse(data);
+
+    return Array.isArray(projects)
+      ? projects
+      : [];
 
   } catch (error) {
 
@@ -58,11 +65,14 @@ function loadProjects() {
     );
 
     return [];
+
   }
+
 }
 
 
 function saveProjects(projects) {
+
   fs.writeFileSync(
     PROJECTS_FILE,
     JSON.stringify(
@@ -72,6 +82,7 @@ function saveProjects(projects) {
     ),
     'utf8'
   );
+
 }
 
 
@@ -85,8 +96,10 @@ const upload = multer({
     multer.memoryStorage(),
 
   limits: {
+
     fileSize:
       25 * 1024 * 1024
+
   }
 
 });
@@ -356,7 +369,7 @@ Personal website hosting panel
 </div>
 
 
-<!-- ================= LOGIN ================= -->
+<!-- LOGIN -->
 
 <div
   id="loginBox"
@@ -393,7 +406,7 @@ ENTER PANEL
 </div>
 
 
-<!-- ================= PANEL ================= -->
+<!-- PANEL -->
 
 <div
   id="panelBox"
@@ -411,14 +424,18 @@ Upload Website
 
 
 <div>
+
 ZIP must contain
 <b>index.html</b>
 at the ZIP root.
+
 </div>
 
 
 <div class="small">
+
 Maximum ZIP size: 25 MB
+
 </div>
 
 
@@ -433,7 +450,7 @@ Maximum ZIP size: 25 MB
   type="button"
   onclick="uploadWebsite()"
 >
-🚀 Upload & Host
+🚀 Upload &amp; Host
 </button>
 
 
@@ -497,6 +514,7 @@ async function doLogin(){
     document.getElementById(
       'loginMessage'
     );
+
 
   loginMessage.textContent =
     'Logging in...';
@@ -632,6 +650,7 @@ async function loadProjects(){
       location.reload();
 
       return;
+
     }
 
 
@@ -648,61 +667,54 @@ async function loadProjects(){
         'No websites hosted yet.';
 
       return;
+
     }
 
 
     projectsBox.innerHTML =
-      data.projects
-        .map(
-          project => `
+      data.projects.map(function(project){
 
-<div class="project">
+        return '<div class="project">' +
 
-<div class="projectName">
+          '<div class="projectName">' +
 
-${escapeHtml(
-  project.name
-)}
+          escapeHtml(
+            project.name
+          ) +
 
-</div>
+          '</div>' +
 
+          '<a target="_blank" ' +
+          'rel="noopener noreferrer" ' +
+          'href="' +
+          escapeHtml(
+            project.url
+          ) +
+          '">' +
 
-<a
-  target="_blank"
-  rel="noopener noreferrer"
-  href="${escapeHtml(
-    project.url
-  )}"
->
+          escapeHtml(
+            project.url
+          ) +
 
-${escapeHtml(
-  project.url
-)}
+          '</a><br>' +
 
-</a>
+          '<button type="button" ' +
+          'class="danger" ' +
+          'onclick="deleteProject(\\'' +
 
+          escapeHtml(
+            project.id
+          ) +
 
-<br>
+          '\\')">' +
 
+          'Delete' +
 
-<button
-  type="button"
-  class="danger"
-  onclick="deleteProject('${escapeHtml(
-    project.id
-  )}')"
->
+          '</button>' +
 
-Delete
+          '</div>';
 
-</button>
-
-
-</div>
-
-`
-        )
-        .join('');
+      }).join('');
 
 
   }catch(error){
@@ -745,6 +757,7 @@ async function uploadWebsite(){
       'msg error';
 
     return;
+
   }
 
 
@@ -761,6 +774,7 @@ async function uploadWebsite(){
       'msg error';
 
     return;
+
   }
 
 
@@ -814,6 +828,7 @@ async function uploadWebsite(){
         'msg error';
 
       return;
+
     }
 
 
@@ -858,6 +873,7 @@ async function deleteProject(id){
   ){
 
     return;
+
   }
 
 
@@ -866,7 +882,7 @@ async function deleteProject(id){
     const response =
       await fetch(
         '/api/projects/' +
-          encodeURIComponent(id),
+        encodeURIComponent(id),
         {
           method:'DELETE',
 
@@ -887,6 +903,7 @@ async function deleteProject(id){
       location.reload();
 
       return;
+
     }
 
 
@@ -897,6 +914,7 @@ async function deleteProject(id){
       );
 
       return;
+
     }
 
 
@@ -926,11 +944,17 @@ function escapeHtml(text){
       function(character){
 
         return {
+
           '&':'&amp;',
+
           '<':'&lt;',
+
           '>':'&gt;',
+
           '"':'&quot;',
+
           "'":'&#039;'
+
         }[character];
 
       }
@@ -948,6 +972,7 @@ function showPanelIfLoggedIn(){
   if(!token){
 
     return;
+
   }
 
 
@@ -1145,13 +1170,20 @@ app.post(
             if(entry.isDirectory){
 
               return false;
+
             }
 
 
             const cleanName =
               entry.entryName
-                .replace(/\\/g, '/')
-                .replace(/^\/+/, '');
+                .replace(
+                  /\\/g,
+                  '/'
+                )
+                .replace(
+                  /^\/+/,
+                  ''
+                );
 
 
             return (
@@ -1268,8 +1300,6 @@ app.post(
               ''
             );
 
-
-        // Ignore empty names
 
         if(!entryName){
 
@@ -1493,8 +1523,6 @@ app.delete(
       );
 
 
-    // Safety check
-
     const safeRoot =
       path.resolve(
         SITES
@@ -1565,8 +1593,6 @@ app.get(
       req.params.slug;
 
 
-    // Only allow safe slug characters
-
     if(
       !/^[a-z0-9-]+$/i.test(
         slug
@@ -1614,7 +1640,7 @@ app.get(
 
 
 // ==========================================
-// STATIC FILES
+// SERVE CSS / JS / IMAGES / ASSETS
 // ==========================================
 
 app.use(
@@ -1637,12 +1663,30 @@ app.use(
     }
 
 
-    next();
+    const siteDirectory =
+      path.join(
+        SITES,
+        slug
+      );
 
-  },
-  express.static(
-    SITES
-  )
+
+    if(
+      !fs.existsSync(
+        siteDirectory
+      )
+    ){
+
+      return res
+        .sendStatus(404);
+
+    }
+
+
+    return express.static(
+      siteDirectory
+    )(req, res, next);
+
+  }
 );
 
 
